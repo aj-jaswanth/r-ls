@@ -19,7 +19,9 @@ fn list_contents(path: &String) {
         Err(e) => print!("ERROR: {}", e),
         Ok(metadata) => {
             if metadata.file_type().is_dir() {
-                list_dir(path);
+                list_dir(path)
+                    .iter()
+                    .for_each(|output| println!("{}", output))
             } else {
                 println!("ERROR: {} is not a directory", path)
             }
@@ -27,17 +29,30 @@ fn list_contents(path: &String) {
     }
 }
 
-fn list_dir(path: &String) {
+fn list_dir(path: &String) -> Vec<String> {
+    let mut outputs = vec![];
     for entry in fs::read_dir(path).unwrap() {
         let dir_entry = entry.unwrap();
         let metadata = dir_entry.metadata().unwrap();
         let accessed_time = metadata.accessed().unwrap();
         let date_time: DateTime<chrono::Local> = accessed_time.into();
         let output = format!(
-            "{:15} {:7}",
+            "{:20} {}",
             dir_entry.file_name().to_str().unwrap(),
             date_time.format("%b %e %H:%M").to_string()
         );
-        println!("{}", output);
+        outputs.push(output);
+    }
+    return outputs;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_list_dir() {
+        let representation = list_dir(&String::from("./src/test_dir"));
+        assert_eq!(representation.len(), 2)
     }
 }
